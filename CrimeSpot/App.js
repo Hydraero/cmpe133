@@ -27,8 +27,11 @@ class App extends Component {
   }
 
   render() {
-    
     this.getData();
+    if(this.state.loading)
+    {
+      return (<ActivityIndicator size="large" color="#0000ff" />)
+    }
     const {points, loading} = this.state;
     console.log(points)
     return (
@@ -44,10 +47,10 @@ class App extends Component {
         >
         <MapView.Heatmap 
             points={points}
-            opacity={1}
-            radius={50}
-            maxIntensity={100}
-            gradientSmoothing={10}
+            opacity={0.7}
+            radius={20}
+            maxIntensity={70}
+            gradientSmoothing={15}
             heatmapMode={"POINTS_DENSITY"}/> 
         </MapView>
       </View>
@@ -55,7 +58,7 @@ class App extends Component {
   }
   async getData()
   {
-    const response = await fetch('http://10.250.27.147:3000/CrimeData');  //change this IP to your internal IP address
+    const response = await fetch('http://10.0.0.177:3000/ParkingViolations');  //change this IP to your internal IP address
     const crimeData =  await response.json();
     this.setState({points: crimeData, loading: false});
     console.log("loading set to false");
