@@ -23,11 +23,15 @@ class App extends Component {
 
   state = {
     points: [],
-    loading: true
+    loading: true,
+    gettingData: false
   }
 
   render() {
-    this.getData();
+    if(!this.state.gettingData)
+    {
+      this.getData();
+    }
     if(this.state.loading)
     {
       return (<ActivityIndicator size="large" color="#0000ff" />)
@@ -41,15 +45,15 @@ class App extends Component {
           initialRegion={{
             latitude: 37.3337,
             longitude: -121.8907,
-            latitudeDelta: 0.09,
-            longitudeDelta: 0.0121
+            latitudeDelta: 0.19,
+            longitudeDelta: 0.1121
           }}
         >
         <MapView.Heatmap 
             points={points}
-            opacity={0.7}
-            radius={20}
-            maxIntensity={70}
+            opacity={0.6}
+            radius={15}
+            maxIntensity={50}
             gradientSmoothing={15}
             heatmapMode={"POINTS_DENSITY"}/> 
         </MapView>
@@ -58,12 +62,20 @@ class App extends Component {
   }
   async getData()
   {
-    const response = await fetch('http://10.0.0.177:3000/ParkingViolations');  //change this IP to your internal IP address
-    const crimeData =  await response.json();
-    this.setState({points: crimeData, loading: false});
-    console.log("loading set to false");
+    console.log("getting data");
+    try
+    {
+      const response = await fetch('https://crimespot.herokuapp.com/parkingviolations');
+      const crimeData =  await response.json();
+      this.setState({points: crimeData, loading: false, gettingData: true});
+      console.log("loading set to false");
+      return(response);
+    }
+    catch(e) {
+      console.error('Error', e.message);
+      return res.render('error_message');
+    } 
   }
-
 }
 
 const styles = StyleSheet.create({
