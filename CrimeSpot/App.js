@@ -20,28 +20,51 @@ import {
 import MapView from 'react-native-maps';
 import { createBottomTabNavigator, createAppContainer} from 'react-navigation';  
 import { createMaterialBottomTabNavigator } from 'react-navigation-material-bottom-tabs';  
-import Icon from 'react-native-vector-icons/FontAwesome5';  
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';  
+import BottomNavigation, {
+  FullTab
+} from 'react-native-material-bottom-navigation'
 
 
-class Danger extends Component {
+class MapScreen extends Component {
 
   state = {
-    points: [],
+    dangerPoints: [],
+    theftPoints:[],
+    parkingPoints: [],
     loading: true,
-    gettingData: false
+    activeTab: 'Danger',
+    gotDanger: false,
+    gotTheft: false,
+    gotParking: false
   }
 
   render() {
-    if(!this.state.gettingData)
+    if(!this.state.gotDanger)
     {
-      this.getData();
+      this.state.gotDanger = true;
+      this.getDangerData();
     }
     if(this.state.loading)
     {
       return (<ActivityIndicator size="large" color="#0000ff" />)
     }
-    const {points, loading} = this.state;
-    console.log(points)
+
+    var points;
+    if(this.state.activeTab == 'Danger')
+    {
+      points = this.state.dangerPoints;
+    }
+    if(this.state.activeTab == 'Theft')
+    {
+      points = this.state.theftPoints;
+    }
+    if(this.state.activeTab == 'Parking')
+    {
+      points = this.state.parkingPoints;
+    }
+    
+    // console.log(points)
     return (
       <View style={styles.container}>
         <MapView
@@ -61,82 +84,110 @@ class Danger extends Component {
             gradientSmoothing={15}
             heatmapMode={"POINTS_DENSITY"}/> 
         </MapView>
+        <BottomNavigation
+          onTabPress={this.handleTabPress}
+          renderTab={this.renderTab}
+          tabs={this.tabs}
+          activeTab = {this.state.activeTab}
+        />
       </View>
       );
   }
-  async getData()
+  async getDangerData()
   {
     try
     {
+      this.setState({loading: true});
       const response = await fetch('https://crimespot.herokuapp.com/danger');
       const crimeData =  await response.json();
-      this.setState({points: crimeData, loading: false, gettingData: true});
-      console.log("loading set to false");
-      
+      this.setState({dangerPoints: crimeData, loading: false, gotDanger: true});
+      console.log("got danger");
     }
     catch(e) {
       console.log('Error', e.message);  
     } 
   }
-}
-
-class Theft extends Component {
-
-  state = {
-    points: [],
-    loading: true,
-    gettingData: false
-  }
-
-  render() {
-    if(!this.state.gettingData)
-    {
-      this.getData();
-    }
-    if(this.state.loading)
-    {
-      return (<ActivityIndicator size="large" color="#0000ff" />)
-    }
-    const {points, loading} = this.state;
-    console.log(points)
-    return (
-      <View style={styles.container}>
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude: 37.3337,
-            longitude: -121.8907,
-            latitudeDelta: 0.19,
-            longitudeDelta: 0.1121
-          }}
-        >
-        <MapView.Heatmap 
-            points={points}
-            opacity={0.6}
-            radius={15}
-            maxIntensity={50}
-            gradientSmoothing={15}
-            heatmapMode={"POINTS_DENSITY"}/> 
-        </MapView>
-      </View>
-      );
-  }
-  async getData()
+  async getTheftData()
   {
     try
     {
+      this.setState({loading: true});
       const response = await fetch('https://crimespot.herokuapp.com/theft');
       const crimeData =  await response.json();
-      this.setState({points: crimeData, loading: false, gettingData: true});
-      console.log("loading set to false");
+      this.setState({theftPoints: crimeData, loading: false, gotTheft: true});
+      console.log("loaded theft data");
       
     }
     catch(e) {
       console.log('Error', e.message);  
     } 
   }
-}
+  async getParkingData()
+  {
+    try
+    {
+      this.setState({loading: true});
+      const response = await fetch('https://crimespot.herokuapp.com/parkingviolations');
+      const crimeData =  await response.json();
+      this.setState({parkingPoints: crimeData, loading: false, gotParking: true});
+      console.log("loaded parking data");
+      
+    }
+    catch(e) {
+      console.log('Error', e.message);  
+    } 
+  }
 
+
+  handleTabPress = (newTab, oldTab) => {
+    this.setState({activeTab: newTab.key})
+    if(newTab.key == 'Theft' && !this.state.gotTheft)
+    {
+      this.getTheftData();
+    }
+    if(newTab.key == 'Parking' && !this.state.gotParking)
+    {
+      this.getParkingData();
+    }
+  }
+
+  tabs = [
+    {
+      key: 'Danger',
+      icon: 'exclamation',
+      label: 'Danger',
+      barColor: '#388E3C',
+      pressColor: 'rgba(255, 255, 255, 0.16)'
+    },
+    {
+      key: 'Theft',
+      icon: 'wallet',
+      label: 'Theft',
+      barColor: '#B71C1C',
+      pressColor: 'rgba(255, 255, 255, 0.16)'
+    },
+    {
+      key: 'Parking',
+      icon: 'parking',
+      label: 'Parking Violations',
+      barColor: '#E64A19',
+      pressColor: 'rgba(255, 255, 255, 0.16)'
+    }
+  ]
+
+  renderIcon = icon => ({ isActive }) => (
+    <FontAwesome5 size={24} color="white" name={icon} />
+  )
+
+  renderTab = ({ tab, isActive }) => (
+    <FullTab
+      isActive={isActive}
+      key={tab.key}
+      label={tab.label}
+      renderIcon={this.renderIcon(tab.icon)}
+    />
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -146,60 +197,5 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-const TabNavigator = createMaterialBottomTabNavigator(  
-  {  
-      Home: { screen: Danger,  
-          navigationOptions:{  
-              tabBarLabel:'Danger',  
-              tabBarIcon: ({ tintColor }) => (  
-                  <View>  
-                      <Icon style={[{color: tintColor}]} size={25} name={'exclamation'}/>  
-                  </View>),  
-          }  
-      },  
-      Profile: { screen: Theft,  
-          navigationOptions:{  
-              tabBarLabel:'Theft',  
-              tabBarIcon: ({ tintColor }) => (  
-                  <View>  
-                      <Icon style={[{color: tintColor}]} size={25} name={'exclamation'}/>  
-                  </View>),  
-              activeColor: '#f60c0d',  
-              inactiveColor: '#f65a22',  
-              barStyle: { backgroundColor: '#f69b31' },  
-          }  
-      },  
-      Image: { screen: Danger,  
-          navigationOptions:{  
-              tabBarLabel:'Traffic Tickets',  
-              tabBarIcon: ({ tintColor }) => (  
-                  <View>  
-                      <Icon style={[{color: tintColor}]} size={25} name={'exclamation'}/>  
-                  </View>),  
-              activeColor: '#615af6',  
-              inactiveColor: '#46f6d7',  
-              barStyle: { backgroundColor: '#67baf6' },  
-          }  
-      },  
-      Cart: {  
-          screen: Danger,  
-          navigationOptions:{  
-              tabBarLabel:'Parking Violations',  
-              tabBarIcon: ({ tintColor }) => (  
-                  <View>  
-                      <Icon style={[{color: tintColor}]} size={25} name={'exclamation'}/>  
-                  </View>),  
-          }  
-      },  
-  },  
-  {  
-    initialRouteName: "Home",  
-    activeColor: '#f0edf6',  
-    inactiveColor: '#226557',  
-    barStyle: { backgroundColor: '#3BAD87' },  
-  },  
-);  
-
-export default createAppContainer(TabNavigator);  
+export default MapScreen;  
 
