@@ -10,22 +10,14 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
 import MapView from 'react-native-maps';
-import {createBottomTabNavigator, createAppContainer} from 'react-navigation';
-import {createMaterialBottomTabNavigator} from 'react-navigation-material-bottom-tabs';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import BottomNavigation, {
   FullTab,
 } from 'react-native-material-bottom-navigation';
 import Geolocation from '@react-native-community/geolocation';
+import {SearchBar} from 'react-native-elements';
+import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
 
 class MapScreen extends Component {
   state = {
@@ -42,6 +34,14 @@ class MapScreen extends Component {
     gotTheft: false,
     gotParking: false,
     gotTraffic: false,
+    search: '',
+  };
+
+  updateSearch = search => {
+    this.setState({search});
+    RNGooglePlaces.openAutocompleteModal().then(place => {
+      console.log(place);
+    });
   };
 
   async requestUserLocation() {
@@ -65,12 +65,13 @@ class MapScreen extends Component {
         console.log('Location permission denied');
       }
     } catch (err) {
-      console.warn("jdlkafs");
+      console.warn('jdlkafs');
     }
   }
 
   render() {
     console.disableYellowBox = true;
+    const {search} = this.state;
     if (!this.state.userLocationFound) {
       this.requestUserLocation();
     }
@@ -86,7 +87,7 @@ class MapScreen extends Component {
       // console.log("fdsl");
       return <ActivityIndicator size="large" color="#0000ff" />;
     }
-    
+
     var points;
 
     if (this.state.activeTab == 'Danger') {
@@ -104,8 +105,56 @@ class MapScreen extends Component {
 
     return (
       <View style={styles.container}>
+        <View style={styles.autoComplete}>
+          <GooglePlacesAutocomplete
+            placeholder="Search"
+            minLength={2} // minimum length of text to search
+            autoFocus={false}
+            returnKeyType={'search'} // Can be left out for default return key https://facebook.github.io/react-native/docs/textinput.html#returnkeytype
+            fetchDetails={true}
+            listViewDisplayed="auto"
+            onPress={(data, details = null) => {
+              // 'details' is provided when fetchDetails = true
+              console.log(data, details);
+            }}
+            getDefaultValue={() => {
+              return '';
+            }}
+            query={{
+              // available options: https://developers.google.com/places/web-service/autocomplete
+              key: 'AIzaSyBso3KXLVMEbvaZXTUv8zwcSiqwNbSJpks',
+              language: 'en', // language of the results
+              types: '(cities)', // default: 'geocode'
+            }}
+            styles={{
+              description: {
+                fontWeight: 'bold',
+              },
+              textInputContainer: {
+                width: '100%',
+              },
+            }}
+            nearbyPlacesAPI="GooglePlacesSearch" // Which API to use: GoogleReverseGeocoding or GooglePlacesSearch
+            GoogleReverseGeocodingQuery={
+              {
+                // available options for GoogleReverseGeocoding API : https://developers.google.com/maps/documentation/geocoding/intro
+              }
+            }
+            GooglePlacesSearchQuery={{
+              // available options for GooglePlacesSearch API : https://developers.google.com/places/web-service/search
+              rankby: 'distance',
+              types: 'food',
+            }}
+            filterReverseGeocodingByTypes={[
+              'locality',
+              'administrative_area_level_3',
+            ]} // filter the reverse geocoding results by types - ['locality', 'administrative_area_level_3'] if you want to display only cities
+            enablePoweredByContainer={false}
+            debounce={200} // debounce the requests in ms. Set to 0 to remove debounce. By default 0ms.
+          />
+        </View>
         <MapView
-          style={styles.map}
+          style={styles.container}
           initialRegion={{
             // 37.3337, -121.8907
             latitude: parseFloat(this.state.userLatitude),
@@ -249,6 +298,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
+    flex: 1,
+  },
+  autoComplete: {
     flex: 1,
   },
 });
