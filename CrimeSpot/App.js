@@ -32,11 +32,13 @@ class MapScreen extends Component {
     dangerPoints: [],
     theftPoints:[],
     parkingPoints: [],
+    trafficPoints: [],
     loading: true,
     activeTab: 'Danger',
     gotDanger: false,
     gotTheft: false,
-    gotParking: false
+    gotParking: false,
+    gotTraffic: false
   }
 
   render() {
@@ -51,6 +53,7 @@ class MapScreen extends Component {
     }
 
     var points;
+
     if(this.state.activeTab == 'Danger')
     {
       points = this.state.dangerPoints;
@@ -62,6 +65,10 @@ class MapScreen extends Component {
     if(this.state.activeTab == 'Parking')
     {
       points = this.state.parkingPoints;
+    }
+    if(this.state.activeTab == 'Traffic')
+    {
+      points = this.state.trafficPoints;
     }
     
     // console.log(points)
@@ -137,6 +144,21 @@ class MapScreen extends Component {
       console.log('Error', e.message);  
     } 
   }
+  async getTrafficData()
+  {
+    try
+    {
+      this.setState({loading: true});
+      const response = await fetch('https://crimespot.herokuapp.com/traffic');
+      const crimeData =  await response.json();
+      this.setState({trafficPoints: crimeData, loading: false, gotTraffic: true});
+      console.log("loaded traffic data");
+      
+    }
+    catch(e) {
+      console.log('Error', e.message);  
+    } 
+  }
 
 
   handleTabPress = (newTab, oldTab) => {
@@ -149,6 +171,10 @@ class MapScreen extends Component {
     {
       this.getParkingData();
     }
+    if(newTab.key == 'Traffic' && !this.state.gotTraffic)
+    {
+      this.getTrafficData();
+    }
   }
 
   tabs = [
@@ -156,21 +182,28 @@ class MapScreen extends Component {
       key: 'Danger',
       icon: 'exclamation',
       label: 'Danger',
-      barColor: '#388E3C',
+      barColor: '#B71C1C',
       pressColor: 'rgba(255, 255, 255, 0.16)'
     },
     {
       key: 'Theft',
       icon: 'wallet',
       label: 'Theft',
-      barColor: '#B71C1C',
+      barColor: '#E64A19',
+      pressColor: 'rgba(255, 255, 255, 0.16)'
+    },
+    {
+      key: 'Traffic',
+      icon: 'car',
+      label: 'Traffic Tickets',
+      barColor: '#218fde',
       pressColor: 'rgba(255, 255, 255, 0.16)'
     },
     {
       key: 'Parking',
       icon: 'parking',
-      label: 'Parking Violations',
-      barColor: '#E64A19',
+      label: 'Parking Tickets',
+      barColor: '#388E3C',
       pressColor: 'rgba(255, 255, 255, 0.16)'
     }
   ]
