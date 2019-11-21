@@ -33,8 +33,8 @@ class MapScreen extends Component {
     theftPoints: [],
     parkingPoints: [],
     trafficPoints: [],
-    userLatitude: '',
-    userLongitude: '',
+    userLatitude: '-37.3337',
+    userLongitude: '-121.8907',
     userLocationFound: false,
     loading: true,
     activeTab: 'Danger',
@@ -48,14 +48,6 @@ class MapScreen extends Component {
     try {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'CrimeSpot Location Permission',
-          message:
-            'CrimeSpot needs access to your location to ' +
-            'help keep you away from danger.',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         Geolocation.getCurrentPosition(position => {
@@ -64,22 +56,22 @@ class MapScreen extends Component {
           this.setState({
             userLatitude: latitude,
             userLongitude: longitude,
+            userLocationFound: true,
           });
-          console.log(this.state.userLatitude);
-          console.log(this.state.userLongitude);
+          console.log(latitude);
+          console.log(longitude);
         });
       } else {
         console.log('Location permission denied');
       }
     } catch (err) {
-      console.warn(err);
+      console.warn("jdlkafs");
     }
   }
 
   render() {
     console.disableYellowBox = true;
     if (!this.state.userLocationFound) {
-      this.state.userLocationFound = true;
       this.requestUserLocation();
     }
     if (!this.state.gotDanger) {
@@ -90,6 +82,11 @@ class MapScreen extends Component {
       return <ActivityIndicator size="large" color="#0000ff" />;
     }
 
+    if (!this.state.userLocationFound) {
+      // console.log("fdsl");
+      return <ActivityIndicator size="large" color="#0000ff" />;
+    }
+    
     var points;
 
     if (this.state.activeTab == 'Danger') {
